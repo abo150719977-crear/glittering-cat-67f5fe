@@ -1,50 +1,29 @@
-# LinguaPro — versión con backend para tutor IA
+# LinguaPro 2.0
 
-## Qué incluye
-- Aplicación web adaptable a móvil, tablet y ordenador.
-- Academia A1 con 12 lecciones iniciales y ejercicios autocorregibles.
-- Vocabulario, tarjetas de memoria y seguimiento local del progreso.
-- Síntesis de pronunciación y dictado por voz del navegador cuando es compatible.
-- **Tutor conversacional conectado a la API de OpenAI mediante una función serverless de Netlify.**
-- La clave de API permanece en el servidor, nunca en el HTML ni en el navegador.
-- Límite básico de mensajes por IP, validación de entradas y respuestas sin caché.
+Aplicación web para aprender italiano (A1–C2): lecciones, vocabulario, ejercicios, exámenes, repaso con tarjetas, lectura en voz alta, reconocimiento de voz, progreso y tutor de IA. Cuentas con Supabase y tutor mediante una función segura de Netlify.
 
-## Importante
-El tutor IA real solo responderá después de desplegar el proyecto en Netlify y configurar una clave válida de OpenAI API. La API se factura por separado de ChatGPT; el uso puede generar costes. La clave no debe compartirse ni pegarse en el chat.
+## Estructura
+`index.html` (app) · `config.js` (datos públicos) · `manifest.webmanifest` + `icon.svg` + `sw.js` (instalable/offline) · `netlify.toml` · `supabase-setup.sql` · `netlify/functions/ai-tutor.mjs` (OpenAI en el servidor)
 
-## Publicar en Netlify
-La función serverless no funciona al abrir `index.html` localmente ni con un simple arrastrar y soltar de archivos estáticos. Despliega el proyecto mediante Git conectado a Netlify o mediante Netlify CLI:
+## 1. Supabase
+1. Crea un proyecto en supabase.com.
+2. **SQL Editor** → pega todo `supabase-setup.sql` → Run (crea la tabla `progress` con RLS: cada alumno solo ve y edita lo suyo).
+3. **Project Settings → API**: copia *Project URL* y la clave *anon public*. Pégalas en `config.js`. (La anon es pública por diseño; nunca uses la `service_role` ni la clave de OpenAI en archivos.)
+4. Tras desplegar, en **Authentication → URL Configuration** pon como *Site URL* la dirección de tu sitio Netlify y añádela en *Redirect URLs* (necesario para recuperar contraseña y confirmar correos).
 
-1. Descomprime el ZIP y guarda la carpeta en tu ordenador.
-2. Sube la carpeta a un repositorio privado de GitHub (recomendado) y conéctalo a Netlify, o despliega con Netlify CLI desde la carpeta.
-3. En Netlify, abre **Site configuration → Environment variables**.
-4. Crea `OPENAI_API_KEY` con tu clave secreta de la plataforma API de OpenAI.
-5. Crea `OPENAI_MODEL` con `gpt-6-luna` (puedes cambiarlo por otro modelo disponible en tu proyecto API).
-6. Vuelve a desplegar el sitio. Abre la página **Hablar** y envía un mensaje de prueba.
+## 2. Netlify
+1. app.netlify.com → **Add new site → Import an existing project → GitHub** → elige el repositorio.
+2. Ajustes de build: sin comando de build, *Publish directory* `.` (ya está en `netlify.toml`).
+3. **Site configuration → Environment variables**: `OPENAI_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` y, opcional, `OPENAI_MODEL` (por defecto `gpt-4o-mini`).
+4. **Deploys → Trigger deploy** para que la función lea las variables.
 
-No guardes la clave en `index.html`, en GitHub, ni en un archivo público. Configura límites de gasto en tu proyecto API y revisa el consumo.
+## 3. Desde un iPhone
+1. En *Archivos* toca el ZIP para descomprimirlo.
+2. En Safari abre tu repositorio en GitHub → **Add file → Upload files** y sube los archivos sueltos (`index.html`, `config.js`, `manifest.webmanifest`, `icon.svg`, `sw.js`, `netlify.toml`, `supabase-setup.sql`, `README.md`) → *Commit changes*.
+3. La función está en una carpeta: usa **Add file → Create new file**, escribe el nombre `netlify/functions/ai-tutor.mjs` (las barras crean las carpetas), pega el contenido y haz *Commit*.
+4. Conecta el repositorio en Netlify (paso 2) y añade las variables.
 
-## Probar la función localmente
-Necesitas Node.js y Netlify CLI. En la carpeta del proyecto:
-
-```bash
-npm install -g netlify-cli
-netlify dev
-```
-
-Configura `OPENAI_API_KEY` como variable de entorno local de tu terminal antes de ejecutar el servidor. No compartas esa clave.
-
-## Voz
-El botón de micrófono usa el reconocimiento de voz del navegador para convertir voz a texto. Ese texto se envía al tutor IA. La respuesta se muestra escrita; el navegador puede leer frases italianas con el botón de pronunciación de las lecciones. Esta versión todavía no es una conversación de voz en tiempo real ni una llamada de audio bidireccional.
-
-## Privacidad y límites de esta versión
-- No hay cuentas de usuario ni sincronización entre dispositivos.
-- El progreso se guarda en el navegador del dispositivo.
-- No se almacenan conversaciones en una base de datos; la función envía `store: false` a la API. Aun así, el texto se transmite al proveedor de IA para generar la respuesta; consulta sus condiciones y configura la privacidad antes de un lanzamiento comercial.
-- El control de frecuencia incluido es básico y en memoria; no sustituye autenticación, protección antiabuso distribuida ni controles de producción.
-- A2-C2, pagos, cuentas, base de datos, panel administrativo y publicación en tiendas siguen pendientes.
-
-## Fuentes técnicas
-- [OpenAI API — Responses](https://developers.openai.com/api/docs/quickstart)
-- [Autenticación y protección de claves](https://developers.openai.com/api/reference/overview)
-- [Modelos disponibles](https://developers.openai.com/api/docs/models)
+## Limitaciones
+- El reconocimiento de voz depende del navegador y solo compara palabras transcritas; no evalúa pronunciación real.
+- El progreso sincroniza con la regla «gana el cambio más reciente».
+- El contenido base está en el objeto `D` de `index.html`; añade temas y palabras con el mismo formato.
