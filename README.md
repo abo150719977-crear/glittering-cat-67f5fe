@@ -27,3 +27,4 @@ Aplicación web para aprender italiano (A1–C2): lecciones, vocabulario, ejerci
 - El reconocimiento de voz depende del navegador y solo compara palabras transcritas; no evalúa pronunciación real.
 - El progreso sincroniza con la regla «gana el cambio más reciente».
 - El contenido base está en el objeto `D` de `index.html`; añade temas y palabras con el mismo formato.
+
